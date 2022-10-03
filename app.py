@@ -1,4 +1,5 @@
 
+from fileinput import filename
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -8,7 +9,7 @@ from datetime import datetime
 from kivy.uix.slider import Slider
 import time
 import threading
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 from kivy.core.window import Window
 
 
@@ -33,19 +34,29 @@ class AlarmApp(GridLayout):
         self.add_widget(self.buttonExit)
 
 
-        self.bellTime = Slider(min=2, max=6, value=3, orientation='vertical',value_track=True)
+        self.bellTime = Slider(min=3, max=10, value=5, orientation='vertical',value_track=True)
+        
         self.add_widget(self.bellTime)
+        self.bellTime.bind(value = self.changeLabel)
+
 
         self.fileName = "bell45.txt"
         self.readFiles(self.fileName)
 
+        self.lbl = Label(text=("aktivno: " + "45 minuta" + "\n  duzina zvona: " + str(self.bellTime.value)) + "s")
 
-        #GPIO.setmode(GPIO.BCM)
-        #GPIO.setwarnings(False)
-        #GPIO.setup(self.pin,GPIO.OUT)
+        self.add_widget(self.lbl)
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(self.pin,GPIO.OUT)
 
         t1 = threading.Thread(target=self.ring, daemon=True)
         t1.start()
+
+    def changeLabel(self, instance, event):
+        self.lbl.text ="active file: " + self.fileName + "\n  duzina zvona: " + str(round(self.bellTime.value,2)) + "s"
+
 
     def callbackExit(self, event):
         App.get_running_app().stop()
@@ -55,7 +66,7 @@ class AlarmApp(GridLayout):
     def readFiles(self, txtName):
         with open(txtName) as f:
             self.clocks = f.readlines()
-        print("red file : " + txtName)
+        print("read file : " + txtName)
 
     def compareTime(self):
         now = datetime.now()
@@ -73,25 +84,33 @@ class AlarmApp(GridLayout):
 
     def callback30(self, event):
         print('The button is being pressed')
-        self.readFiles("bell30.txt")
+        self.fileName = "bell30.txt"
+        self.readFiles(self.fileName)
+        self.lbl.text ="aktivno: " + "45 minuta" +"\n  duzina zvona: " + str(round(self.bellTime.value,2)) + "s"
+
 
     def callback45(self, event):
         print('The button is being pressed')
-        self.readFiles("bell45.txt")
+        self.fileName = "bell45.txt"
+        self.readFiles(self.fileName)
+        self.lbl.text ="aktivno: "+ "30 minuta" +"\n  duzina zvona: " + str(round(self.bellTime.value,2)) + "s"
+
     
     def callbackCustom(self, event):
         print('The button is being pressed')
-        self.readFiles("bellCustom.txt")
-
+        self.fileName = "bellCustom.txt"
+        self.readFiles(self.fileName)
+        self.lbl.text ="aktivno: " + "van standarda" +"\n  duzina zvona: " + str(round(self.bellTime.value,2)) + "s"
+    
     def ring(self):
         print("Thread started")
         while True:
             if(self.compareTime() == True):
                 print("zvoni")
-                #GPIO.output(self.pin, GPIO.HIGH)
+                GPIO.output(self.pin, GPIO.HIGH)
                 time.sleep(self.bellTime.value)
                 print("ne zvoni")
-                #GPIO.output(self.pin, GPIO.LOW)
+                GPIO.output(self.pin, GPIO.LOW)
                 time.sleep(60)
 
 class MyApp(App):
