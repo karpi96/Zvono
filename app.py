@@ -17,7 +17,7 @@ class AlarmApp(GridLayout):
     clocks = []
     def __init__(self, **kwargs):
         super(AlarmApp, self).__init__(**kwargs)
-        self.cols = 2
+        self.cols = 3
     
         self.button45 = Button(text='45 min', font_size=14)
         self.button45.bind(on_press=self.callback45)
@@ -25,9 +25,13 @@ class AlarmApp(GridLayout):
         self.button30.bind(on_press=self.callback30)
         self.buttonCustom = Button(text='custom', font_size=14)
         self.buttonCustom.bind(on_press=self.callbackCustom)
+        self.buttonExit = Button(text='exit', font_size=14)
+        self.buttonExit.bind(on_press=self.callbackExit)
         self.add_widget(self.button45)
         self.add_widget(self.button30)
         self.add_widget(self.buttonCustom)
+        self.add_widget(self.buttonExit)
+
 
         self.bellTime = Slider(min=2, max=6, value=3, orientation='vertical',value_track=True)
         self.add_widget(self.bellTime)
@@ -42,6 +46,11 @@ class AlarmApp(GridLayout):
 
         t1 = threading.Thread(target=self.ring, daemon=True)
         t1.start()
+
+    def callbackExit(self, event):
+        App.get_running_app().stop()
+        # removing window
+        Window.close()
 
     def readFiles(self, txtName):
         with open(txtName) as f:
