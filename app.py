@@ -9,6 +9,8 @@ from kivy.uix.slider import Slider
 import time
 import threading
 #import RPi.GPIO as GPIO
+from kivy.core.window import Window
+
 
 class AlarmApp(GridLayout):
     pin = 5
@@ -18,20 +20,20 @@ class AlarmApp(GridLayout):
         self.cols = 2
     
         self.button45 = Button(text='45 min', font_size=14)
-        self.button45.bind(on_press=lambda textFile = "bell45.txt": self.callback(textFile))
+        self.button45.bind(on_press=self.callback45)
         self.button30 = Button(text='30 min', font_size=14)
-        self.button30.bind(on_press=lambda textFile = "bell30.txt": self.callback(textFile))
+        self.button30.bind(on_press=self.callback30)
         self.buttonCustom = Button(text='custom', font_size=14)
-        self.buttonCustom.bind(on_press=lambda textFile = "bellCustom.txt": self.callback(textFile))
+        self.buttonCustom.bind(on_press=self.callbackCustom)
         self.add_widget(self.button45)
         self.add_widget(self.button30)
         self.add_widget(self.buttonCustom)
 
-        self.s = Slider(min=2, max=6, value=3, orientation='vertical',value_track=True)
-        self.add_widget(self.s)
+        self.bellTime = Slider(min=2, max=6, value=3, orientation='vertical',value_track=True)
+        self.add_widget(self.bellTime)
 
-        #self.fileName = "bell45.txt"
-        #self.readFiles(self.fileName)
+        self.fileName = "bell45.txt"
+        self.readFiles(self.fileName)
 
 
         #GPIO.setmode(GPIO.BCM)
@@ -41,7 +43,7 @@ class AlarmApp(GridLayout):
         t1 = threading.Thread(target=self.ring, daemon=True)
         t1.start()
 
-    def readFiles(self, event, txtName):
+    def readFiles(self, txtName):
         with open(txtName) as f:
             self.clocks = f.readlines()
         print("red file : " + txtName)
@@ -60,9 +62,17 @@ class AlarmApp(GridLayout):
                 return True
         return False
 
-    def callback(self, txtFile):
+    def callback30(self, event):
         print('The button is being pressed')
-        self.readFiles(txtFile)
+        self.readFiles("bell30.txt")
+
+    def callback45(self, event):
+        print('The button is being pressed')
+        self.readFiles("bell45.txt")
+    
+    def callbackCustom(self, event):
+        print('The button is being pressed')
+        self.readFiles("bellCustom.txt")
 
     def ring(self):
         print("Thread started")
@@ -70,7 +80,7 @@ class AlarmApp(GridLayout):
             if(self.compareTime() == True):
                 print("zvoni")
                 #GPIO.output(self.pin, GPIO.HIGH)
-                time.sleep(self.s.value)
+                time.sleep(self.bellTime.value)
                 print("ne zvoni")
                 #GPIO.output(self.pin, GPIO.LOW)
                 time.sleep(60)
@@ -82,4 +92,5 @@ class MyApp(App):
 
 
 if __name__ == '__main__':
+    Window.fullscreen = 'auto'
     MyApp().run()
